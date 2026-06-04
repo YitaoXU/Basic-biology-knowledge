@@ -1,0 +1,684 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抗体多样性与B细胞发育知识库</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.8;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 1.8em;
+    color: #2b6cb0;
+    margin: 20px 0 10px;
+    border-bottom: 3px solid #2b6cb0;
+    padding-bottom: 10px;
+  }
+  h2 {
+    font-size: 1.35em;
+    color: #2c5282;
+    margin: 30px 0 12px;
+    padding-left: 12px;
+    border-left: 5px solid #4299e1;
+  }
+  h3 {
+    font-size: 1.1em;
+    color: #2d3748;
+    margin: 18px 0 8px;
+  }
+  p { margin: 8px 0; text-align: justify; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 18px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .highlight-box {
+    background: #ebf8ff;
+    border-left: 4px solid #4299e1;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .warn-box {
+    background: #fffaf0;
+    border-left: 4px solid #ed8936;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .key { color: #c53030; font-weight: bold; }
+  .blue { color: #2b6cb0; font-weight: bold; }
+  .green { color: #276749; font-weight: bold; }
+  .orange { color: #c05621; font-weight: bold; }
+
+  /* Diagram Styles */
+  .diagram {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .diagram-title {
+    text-align: center;
+    font-weight: bold;
+    color: #2c5282;
+    margin-bottom: 14px;
+    font-size: 1.05em;
+  }
+  /* Gene segment bars */
+  .gene-row {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .gene-label {
+    width: 80px;
+    font-weight: bold;
+    font-size: 0.85em;
+    color: #4a5568;
+    flex-shrink: 0;
+  }
+  .seg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #fff;
+    min-width: 36px;
+    text-align: center;
+  }
+  .seg-v { background: #4299e1; }
+  .seg-d { background: #ed8936; }
+  .seg-j { background: #48bb78; }
+  .seg-c { background: #9f7aea; }
+  .seg-rss { background: #e2e8f0; color: #718096; font-size: 0.7em; }
+  .seg-skip { background: #fed7d7; color: #c53030; }
+  .seg-circle { background: #fefcbf; color: #975a16; border: 2px dashed #d69e2e; }
+  .arrow { font-size: 1.2em; color: #a0aec0; margin: 0 4px; }
+  .dots { color: #a0aec0; margin: 0 2px; }
+
+  /* Flow chart */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0;
+  }
+  .flow-step {
+    background: #ebf8ff;
+    border: 2px solid #4299e1;
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 0.92em;
+    max-width: 600px;
+    width: 100%;
+  }
+  .flow-step.red { background: #fff5f5; border-color: #fc8181; }
+  .flow-step.green-s { background: #f0fff4; border-color: #68d391; }
+  .flow-step.orange-s { background: #fffaf0; border-color: #ed8936; }
+  .flow-step.purple-s { background: #faf5ff; border-color: #b794f4; }
+  .flow-arrow {
+    font-size: 1.4em;
+    color: #a0aec0;
+    margin: 4px 0;
+  }
+
+  /* CDR mapping table */
+  .map-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.9em;
+  }
+  .map-table th {
+    background: #2c5282;
+    color: #fff;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .map-table td {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .map-table tr:nth-child(even) { background: #f7fafc; }
+  .map-table tr:hover { background: #ebf8ff; }
+
+  /* SVG diagrams */
+  svg text { font-family: "Segoe UI", "PingFang SC", sans-serif; }
+
+  .toc {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin: 18px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .toc ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .toc li {
+    padding: 4px 0;
+  }
+  .toc a {
+    color: #2b6cb0;
+    text-decoration: none;
+    font-size: 0.95em;
+  }
+  .toc a:hover { text-decoration: underline; }
+  .toc-num {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    background: #4299e1;
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .card { padding: 16px; }
+    h1 { font-size: 1.4em; }
+    h2 { font-size: 1.15em; }
+    .gene-label { width: 60px; font-size: 0.78em; }
+    .seg { padding: 3px 6px; font-size: 0.7em; min-width: 28px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🧬 抗体多样性与B细胞发育 完整笔记</h1>
+
+<div class="toc">
+  <h3>📑 目录</h3>
+  <ul>
+    <li><span class="toc-num">1</span><a href="#sec1">VDJ重组的基本流程</a></li>
+    <li><span class="toc-num">2</span><a href="#sec2">环状DNA（Excision Circle）的产生</a></li>
+    <li><span class="toc-num">3</span><a href="#sec3">CDR1/2/3分别来自哪里？</a></li>
+    <li><span class="toc-num">4</span><a href="#sec4">抗体结构域与基因片段的对应关系</a></li>
+    <li><span class="toc-num">5</span><a href="#sec5">中枢耐受与外周耐受</a></li>
+    <li><span class="toc-num">6</span><a href="#sec6">B细胞发育全流程图</a></li>
+    <li><span class="toc-num">7</span><a href="#sec7">体细胞超突变（SHM）与突变率计算</a></li>
+    <li><span class="toc-num">8</span><a href="#sec8">Germline偏离度与抗原识别广度</a></li>
+    <li><span class="toc-num">9</span><a href="#sec9">多样性来源总结表</a></li>
+  </ul>
+</div>
+
+<!-- ===================== Section 1 ===================== -->
+<div class="card" id="sec1">
+  <h2>1. VDJ重组的基本流程</h2>
+
+  <p>抗体重链的可变区由 <span class="blue">V（Variable）</span>、<span class="orange">D（Diversity）</span>、<span class="green">J（Joining）</span> 三种基因片段拼接而成。轻链只有V和J，没有D。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">重链基因座（IgH locus）胚系排列</div>
+    <div class="gene-row">
+      <span class="gene-label">胚系DNA:</span>
+      <span class="seg seg-v">V1</span>
+      <span class="seg seg-v">V2</span>
+      <span class="dots">···</span>
+      <span class="seg seg-v">V65</span>
+      <span class="seg seg-d">D1</span>
+      <span class="seg seg-d">D2</span>
+      <span class="dots">···</span>
+      <span class="seg seg-d">D27</span>
+      <span class="seg seg-j">J1</span>
+      <span class="seg seg-j">J2</span>
+      <span class="dots">···</span>
+      <span class="seg seg-j">J6</span>
+      <span class="seg seg-c">Cμ</span>
+      <span class="seg seg-c">Cδ</span>
+      <span class="dots">···</span>
+    </div>
+  </div>
+
+  <h3>重组分两步进行：</h3>
+
+  <p><strong>第一步：D-J重组</strong> — 在Pro-B细胞阶段，RAG1/RAG2酶识别D和J片段两侧的<strong>重组信号序列（RSS）</strong>，随机选择一个D片段和一个J片段进行连接。例如选中D3和J4，那么D3到J4之间的所有片段（D4–D27、J1–J3）会被切除。</p>
+
+  <p><strong>第二步：V-DJ重组</strong> — 在Pre-B细胞阶段，再从上游选择一个V片段与已重排的DJ片段相连。V和DJ之间的所有片段被切除。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">重组过程示意</div>
+    <div class="gene-row" style="margin-bottom: 4px;">
+      <span class="gene-label">① 胚系:</span>
+      <span class="seg seg-v">V1~65</span>
+      <span class="seg seg-d">D1</span><span class="seg seg-d">D2</span><span class="seg seg-d" style="background:#c05621">D3</span>
+      <span class="seg seg-skip">D4~27</span>
+      <span class="seg seg-skip">J1~3</span>
+      <span class="seg seg-j" style="background:#276749">J4</span><span class="seg seg-j">J5</span><span class="seg seg-j">J6</span>
+      <span class="seg seg-c">Cμ</span>
+    </div>
+    <div style="text-align:center; color:#a0aec0; font-size:1.3em;">↓ D-J重组（切除中间片段，形成环状DNA）</div>
+    <div class="gene-row" style="margin-bottom: 4px;">
+      <span class="gene-label">② D-J已连:</span>
+      <span class="seg seg-v">V1~65</span>
+      <span class="seg seg-d">D1</span><span class="seg seg-d">D2</span>
+      <span class="seg seg-d" style="background:#c05621">D3</span><span class="seg seg-j" style="background:#276749">J4</span>
+      <span class="seg seg-j">J5</span><span class="seg seg-j">J6</span>
+      <span class="seg seg-c">Cμ</span>
+    </div>
+    <div style="text-align:center; color:#a0aec0; font-size:1.3em;">↓ V-DJ重组</div>
+    <div class="gene-row">
+      <span class="gene-label">③ 完成:</span>
+      <span class="seg seg-v" style="background:#2b6cb0">V22</span>
+      <span class="seg seg-d" style="background:#c05621">D3</span>
+      <span class="seg seg-j" style="background:#276749">J4</span>
+      <span class="seg seg-j">J5</span><span class="seg seg-j">J6</span>
+      <span class="seg seg-c">Cμ</span>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>连接多样性（Junctional Diversity）：</strong>在V-D和D-J的连接处，TdT酶会随机添加<span class="key">N核苷酸</span>（非模板编码），外切酶会随机削减末端碱基，还会产生<span class="key">P核苷酸</span>（回文序列）。这些随机过程使得每次重组产生的CDR3序列几乎都是独一无二的。
+  </div>
+</div>
+
+<!-- ===================== Section 2 ===================== -->
+<div class="card" id="sec2">
+  <h2>2. 环状DNA（Excision Circle）的产生</h2>
+
+  <p>VDJ重组时，被跳过的基因片段并<strong>不是被降解</strong>了。RAG酶在切割选中片段的RSS后，两端的信号序列会自己<strong>头尾相连</strong>，形成一个<span class="key">环状DNA分子</span>，学名叫 <strong>Signal Joint Excision Circle</strong>。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 500 220" width="100%" style="max-width:500px; display:block; margin:0 auto;">
+      <!-- 线性DNA -->
+      <rect x="20" y="20" width="460" height="30" rx="5" fill="#e2e8f0" stroke="#a0aec0"></rect>
+      <rect x="60" y="20" width="50" height="30" rx="3" fill="#ed8936"></rect>
+      <text x="85" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">D3</text>
+      <rect x="130" y="20" width="80" height="30" rx="3" fill="#fed7d7" stroke="#fc8181" stroke-dasharray="3"></rect>
+      <text x="170" y="40" text-anchor="middle" fill="#c53030" font-size="10">D4...J3</text>
+      <rect x="230" y="20" width="50" height="30" rx="3" fill="#48bb78"></rect>
+      <text x="255" y="40" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">J4</text>
+      <text x="370" y="40" text-anchor="middle" fill="#718096" font-size="11">Cμ ...</text>
+      <!-- 剪刀 -->
+      <text x="120" y="15" font-size="16">✂️</text>
+      <text x="220" y="15" font-size="16">✂️</text>
+      <!-- 箭头 -->
+      <line x1="170" y1="60" x2="170" y2="85" stroke="#a0aec0" stroke-width="2" marker-end="url(#arrowhead)"></line>
+      <defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#a0aec0"></polygon></marker></defs>
+      <!-- 环状DNA -->
+      <circle cx="170" cy="150" r="50" fill="#fefcbf" stroke="#d69e2e" stroke-width="2.5" stroke-dasharray="6"></circle>
+      <text x="170" y="145" text-anchor="middle" fill="#975a16" font-size="10" font-weight="bold">D4...D27</text>
+      <text x="170" y="162" text-anchor="middle" fill="#975a16" font-size="10" font-weight="bold">J1...J3</text>
+      <text x="170" y="215" text-anchor="middle" fill="#975a16" font-size="11">Signal Joint Excision Circle</text>
+      <!-- 连接后的DNA -->
+      <rect x="310" y="100" width="170" height="30" rx="5" fill="#e2e8f0" stroke="#a0aec0"></rect>
+      <rect x="330" y="100" width="50" height="30" rx="3" fill="#ed8936"></rect>
+      <text x="355" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">D3</text>
+      <rect x="380" y="100" width="50" height="30" rx="3" fill="#48bb78"></rect>
+      <text x="405" y="120" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">J4</text>
+      <text x="395" y="150" text-anchor="middle" fill="#4a5568" font-size="10">D-J已连接</text>
+      <line x1="230" y1="115" x2="305" y2="115" stroke="#a0aec0" stroke-width="1.5" stroke-dasharray="4"></line>
+    </svg>
+  </div>
+
+  <div class="highlight-box">
+    <strong>临床意义：</strong>这些环状DNA没有复制起点，细胞每分裂一次就稀释一半。在B细胞中叫 <span class="key">KREC（Kappa-deleting Recombination Excision Circle）</span>，在T细胞中叫 <span class="key">TREC</span>。临床上可以通过定量检测TREC/KREC来评估胸腺/骨髓新生淋巴细胞的产出能力（如新生儿SCID筛查）。
+  </div>
+</div>
+
+<!-- ===================== Section 3 ===================== -->
+<div class="card" id="sec3">
+  <h2>3. CDR1 / CDR2 / CDR3 分别来自哪里？</h2>
+
+  <p>很多人以为三个CDR都是VDJ重组"拼出来"的，其实<strong>只有CDR3</strong>位于V-D-J的连接处。CDR1和CDR2<strong>完整地编码在V基因片段内部</strong>。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">V基因片段内部结构</div>
+    <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2px; margin: 10px 0;">
+      <span class="seg" style="background:#bee3f8; color:#2c5282;">FR1</span>
+      <span class="seg" style="background:#2b6cb0; color:#fff;">CDR1</span>
+      <span class="seg" style="background:#bee3f8; color:#2c5282;">FR2</span>
+      <span class="seg" style="background:#2b6cb0; color:#fff;">CDR2</span>
+      <span class="seg" style="background:#bee3f8; color:#2c5282;">FR3</span>
+      <span style="color:#a0aec0; font-size:0.9em;">← 全部在V片段内 →</span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2px; margin: 10px 0;">
+      <span class="seg" style="background:#bee3f8; color:#2c5282; opacity:0.4;">FR3尾</span>
+      <span class="seg seg-v" style="background:#2b6cb0;">V尾</span>
+      <span style="background:#fefcbf; color:#975a16; padding:4px 6px; border-radius:4px; font-size:0.78em; font-weight:bold; border:2px solid #d69e2e;">N+P</span>
+      <span class="seg seg-d" style="background:#ed8936;">D</span>
+      <span style="background:#fefcbf; color:#975a16; padding:4px 6px; border-radius:4px; font-size:0.78em; font-weight:bold; border:2px solid #d69e2e;">N+P</span>
+      <span class="seg seg-j" style="background:#48bb78;">J头</span>
+      <span class="seg" style="background:#c6f6d5; color:#276749;">FR4</span>
+      <span style="color:#c53030; font-size:0.85em; font-weight:bold;">← CDR3区域 →</span>
+    </div>
+  </div>
+
+  <table class="map-table">
+    <thead>
+      <tr><th>区域</th><th>编码来源</th><th>多样性机制</th><th>多样性水平</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CDR1</strong></td>
+        <td>V基因片段内部</td>
+        <td>组合多样性（选哪个V）</td>
+        <td>中等（~65种V基因）</td>
+      </tr>
+      <tr>
+        <td><strong>CDR2</strong></td>
+        <td>V基因片段内部</td>
+        <td>组合多样性（选哪个V）</td>
+        <td>中等（~65种V基因）</td>
+      </tr>
+      <tr>
+        <td style="background:#fff5f5;"><strong style="color:#c53030;">CDR3</strong></td>
+        <td style="background:#fff5f5;">V-D-J连接处</td>
+        <td style="background:#fff5f5;">组合 + 连接多样性<br>(N/P核苷酸、外切酶)</td>
+        <td style="background:#fff5f5;"><strong style="color:#c53030;">极高（&gt;10¹¹种）</strong></td>
+      </tr>
+      <tr>
+        <td><strong>FR4</strong></td>
+        <td>J基因片段</td>
+        <td>选哪个J</td>
+        <td>低（6种J基因）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box">
+    <strong>关键结论：</strong>在初始B细胞（naive B cell）中，CDR1和CDR2与对应germline V基因序列<span class="key">完全一致</span>。只有经历体细胞超突变（SHM）之后，CDR1和CDR2才会积累点突变，偏离germline序列。
+  </div>
+</div>
+
+<!-- ===================== Section 4 ===================== -->
+<div class="card" id="sec4">
+  <h2>4. 抗体结构域与基因片段的对应关系</h2>
+
+  <div class="diagram">
+    <svg viewBox="0 0 520 300" width="100%" style="max-width:540px; display:block; margin:0 auto;">
+      <!-- Y shape antibody -->
+      <!-- Left arm -->
+      <rect x="60" y="30" width="80" height="40" rx="6" fill="#4299e1" stroke="#2b6cb0" stroke-width="1.5"></rect>
+      <text x="100" y="55" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">VH</text>
+      <rect x="60" y="75" width="80" height="40" rx="6" fill="#9f7aea" stroke="#805ad5" stroke-width="1.5"></rect>
+      <text x="100" y="100" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">CH1</text>
+      <!-- Right arm -->
+      <rect x="260" y="30" width="80" height="40" rx="6" fill="#4299e1" stroke="#2b6cb0" stroke-width="1.5"></rect>
+      <text x="300" y="55" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">VH</text>
+      <rect x="260" y="75" width="80" height="40" rx="6" fill="#9f7aea" stroke="#805ad5" stroke-width="1.5"></rect>
+      <text x="300" y="100" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">CH1</text>
+      <!-- Light chains -->
+      <rect x="20" y="30" width="35" height="40" rx="5" fill="#68d391" stroke="#38a169" stroke-width="1.5"></rect>
+      <text x="37" y="55" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">VL</text>
+      <rect x="20" y="75" width="35" height="40" rx="5" fill="#fbb6ce" stroke="#d53f8c" stroke-width="1.5"></rect>
+      <text x="37" y="100" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">CL</text>
+      <rect x="345" y="30" width="35" height="40" rx="5" fill="#68d391" stroke="#38a169" stroke-width="1.5"></rect>
+      <text x="362" y="55" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">VL</text>
+      <rect x="345" y="75" width="35" height="40" rx="5" fill="#fbb6ce" stroke="#d53f8c" stroke-width="1.5"></rect>
+      <text x="362" y="100" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">CL</text>
+      <!-- Hinge -->
+      <line x1="140" y1="115" x2="200" y2="145" stroke="#805ad5" stroke-width="3"></line>
+      <line x1="260" y1="115" x2="200" y2="145" stroke="#805ad5" stroke-width="3"></line>
+      <!-- Stem -->
+      <rect x="170" y="145" width="60" height="40" rx="6" fill="#9f7aea" stroke="#805ad5" stroke-width="1.5"></rect>
+      <text x="200" y="170" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">CH2</text>
+      <rect x="170" y="190" width="60" height="40" rx="6" fill="#9f7aea" stroke="#805ad5" stroke-width="1.5"></rect>
+      <text x="200" y="215" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">CH3</text>
+      <!-- Annotations -->
+      <text x="420" y="50" fill="#2b6cb0" font-size="10" font-weight="bold">← VH = V+D+J基因编码</text>
+      <text x="420" y="70" fill="#2b6cb0" font-size="9">（含CDR1/2/3, FR1~4）</text>
+      <text x="420" y="100" fill="#805ad5" font-size="10" font-weight="bold">← CH = C基因编码</text>
+      <text x="420" y="180" fill="#805ad5" font-size="10" font-weight="bold">← 类别转换改变这里</text>
+      <!-- CDR dots on VH -->
+      <circle cx="72" cy="35" r="4" fill="#fc8181"></circle>
+      <circle cx="88" cy="35" r="4" fill="#fc8181"></circle>
+      <circle cx="104" cy="35" r="4" fill="#fc8181"></circle>
+      <text x="100" y="25" text-anchor="middle" fill="#c53030" font-size="8.5" font-weight="bold">CDR1 CDR2 CDR3</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===================== Section 5 ===================== -->
+<div class="card" id="sec5">
+  <h2>5. 中枢耐受与外周耐受</h2>
+
+  <p>VDJ重组是随机的，不可避免会产生能识别自身抗原的B细胞。机体必须清除或沉默这些"危险"细胞，这就是<strong>免疫耐受</strong>。</p>
+
+  <h3>🔬 中枢耐受（骨髓内）</h3>
+  <p>未成熟B细胞在骨髓中表达IgM后，会接受自身抗原的"考试"：</p>
+
+  <div class="diagram">
+    <div class="diagram-title">中枢耐受的三种结局</div>
+    <div class="flow">
+      <div class="flow-step">未成熟B细胞表面表达IgM → 遇到自身抗原</div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step orange-s">
+        <strong>① 受体编辑（Receptor Editing）</strong><br>
+        重新激活RAG酶，换一条轻链（κ→κ'或λ），看看新的BCR还结不结合自身抗原。<br>
+        <em>大约30-50%的B细胞经历过受体编辑。</em>
+      </div>
+      <div class="flow-arrow">↓ 如果编辑失败仍然自反应</div>
+      <div class="flow-step red">
+        <strong>② 克隆删除（Clonal Deletion）</strong><br>
+        诱导细胞凋亡，彻底消除。
+      </div>
+      <div class="flow-arrow">↓ 如果是低亲和力自反应</div>
+      <div class="flow-step purple-s">
+        <strong>③ 无能化（Anergy）</strong><br>
+        细胞活着但功能沉默，BCR信号传导被抑制，在外周寿命很短。
+      </div>
+    </div>
+  </div>
+
+  <h3>🛡 外周耐受（骨髓外）</h3>
+  <p>逃逸出骨髓的自反应性B细胞在外周还会受到第二道检查：</p>
+  <div class="highlight-box">
+    <strong>机制包括：</strong>缺乏T细胞帮助（没有自反应性Th细胞来提供共刺激信号） → B细胞得不到存活信号 → 凋亡或无能化。调节性T细胞（Treg）也参与抑制外周自反应性B细胞。
+  </div>
+</div>
+
+<!-- ===================== Section 6 ===================== -->
+<div class="card" id="sec6">
+  <h2>6. B细胞发育全流程</h2>
+
+  <div class="diagram">
+    <div class="diagram-title">从造血干细胞到效应细胞的完整旅程</div>
+    <div class="flow">
+      <div class="flow-step" style="background:#f0fff4; border-color:#68d391;">
+        <strong>骨髓 - 抗原非依赖阶段</strong>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <strong>造血干细胞 → Pro-B细胞</strong><br>
+        开始D-J重组（重链）
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <strong>Pre-B细胞</strong><br>
+        完成V-DJ重组 → 表达pre-BCR（μ重链 + 替代轻链）<br>
+        → 轻链V-J重组
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <strong>未成熟B细胞</strong><br>
+        表面表达完整IgM
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step red">
+        <strong>🚨 中枢耐受检查点</strong><br>
+        受体编辑 / 克隆删除 / 无能化
+      </div>
+      <div class="flow-arrow">↓ 通过检查 → 离开骨髓</div>
+      <div class="flow-step" style="background:#faf5ff; border-color:#b794f4;">
+        <strong>外周 - 抗原依赖阶段</strong>
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step">
+        <strong>成熟Naive B细胞</strong><br>
+        共表达IgM + IgD，定居在脾脏/淋巴结滤泡
+      </div>
+      <div class="flow-arrow">↓ 遇到抗原 + T细胞帮助</div>
+      <div class="flow-step green-s">
+        <strong>生发中心（Germinal Center）反应</strong><br>
+        ① 体细胞超突变（SHM）→ CDR区积累点突变<br>
+        ② 亲和力成熟 → 选择高亲和力变体<br>
+        ③ 类别转换（CSR）→ IgM → IgG/IgA/IgE
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step orange-s" style="display:flex; justify-content:center; gap:30px; flex-wrap:wrap;">
+        <div><strong>浆细胞</strong><br>大量分泌抗体</div>
+        <div><strong>记忆B细胞</strong><br>长期存活，快速再应答</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Section 7 ===================== -->
+<div class="card" id="sec7">
+  <h2>7. 体细胞超突变（SHM）与突变率计算</h2>
+
+  <h3>AID酶驱动的点突变</h3>
+  <p>在生发中心，<strong>活化诱导胞苷脱氨酶（AID）</strong>特异性地在已重排的V区基因上引入点突变，突变率约为 <span class="key">10⁻³/bp/代</span>，比正常DNA复制的突变率高约一百万倍。</p>
+
+  <h3>突变率怎么计算？</h3>
+
+  <div class="highlight-box">
+    <strong>标准方法：</strong><br>
+    ① 将测序得到的抗体V区序列与最近的 <span class="blue">germline V基因</span> 做逐碱基比对<br>
+    ② <strong>只统计V基因片段覆盖的区域</strong>（通常到FR3末尾/CDR3起始处之前）<br>
+    ③ 突变率 = 突变碱基数 ÷ 比对的总碱基数 × 100%<br>
+  </div>
+
+  <div class="warn-box">
+    <strong>⚠️ CDR3连接区不计入突变率！</strong><br>
+    CDR3区域包含N核苷酸添加、P核苷酸、外切酶削减的痕迹——这些属于<span class="orange">连接多样性（junctional diversity）</span>，不是AID引入的点突变，机制完全不同。标准分析工具（如IgBLAST、IMGT/V-QUEST）会自动将CDR3连接处排除或单独处理。
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">突变率计算示意</div>
+    <svg viewBox="0 0 500 120" width="100%" style="max-width:500px; display:block; margin:0 auto;">
+      <!-- Germline -->
+      <text x="10" y="30" fill="#718096" font-size="10" font-weight="bold">Germline V:</text>
+      <rect x="100" y="15" width="280" height="24" rx="4" fill="#bee3f8" stroke="#4299e1"></rect>
+      <text x="240" y="32" text-anchor="middle" fill="#2c5282" font-size="10">ATGCTAGCCTGA...（280 bp）</text>
+      <!-- Mutated -->
+      <text x="10" y="70" fill="#718096" font-size="10" font-weight="bold">你的抗体V:</text>
+      <rect x="100" y="55" width="280" height="24" rx="4" fill="#fed7e2" stroke="#d53f8c"></rect>
+      <text x="240" y="72" text-anchor="middle" fill="#97266d" font-size="10">ATG<tspan fill="#c53030" font-weight="bold">A</tspan>TAG<tspan fill="#c53030" font-weight="bold">A</tspan>CTGA...（14个突变）</text>
+      <!-- CDR3 excluded -->
+      <rect x="390" y="15" width="80" height="24" rx="4" fill="#e2e8f0" stroke="#a0aec0" stroke-dasharray="4"></rect>
+      <text x="430" y="32" text-anchor="middle" fill="#a0aec0" font-size="9">CDR3</text>
+      <rect x="390" y="55" width="80" height="24" rx="4" fill="#e2e8f0" stroke="#a0aec0" stroke-dasharray="4"></rect>
+      <text x="430" y="72" text-anchor="middle" fill="#a0aec0" font-size="9">CDR3</text>
+      <text x="430" y="100" text-anchor="middle" fill="#c53030" font-size="10" font-weight="bold">← 不计入</text>
+      <!-- Result -->
+      <text x="240" y="105" text-anchor="middle" fill="#2c5282" font-size="11" font-weight="bold">突变率 = 14/280 = 5.0%</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ===================== Section 8 ===================== -->
+<div class="card" id="sec8">
+  <h2>8. Germline偏离度与抗原识别广度</h2>
+
+  <h3>常见误解："突变越多 = 识别越广"？</h3>
+
+  <p><span class="key">不是简单的正相关。</span> 因果关系需要反过来理解：</p>
+
+  <div class="diagram">
+    <div class="diagram-title">两种情况的对比</div>
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:200px; background:#f0fff4; border:2px solid #68d391; border-radius:10px; padding:14px;">
+        <h3 style="color:#276749; margin:0 0 8px;">普通病原体（如流感）</h3>
+        <p style="font-size:0.9em;">表位相对暴露，易接触。少量突变（5~15%）即可获得高亲和力。过度突变可能反而破坏抗体结构或引发自身反应性。</p>
+      </div>
+      <div style="flex:1; min-width:200px; background:#fff5f5; border:2px solid #fc8181; border-radius:10px; padding:14px;">
+        <h3 style="color:#c53030; margin:0 0 8px;">HIV 广谱中和抗体（bnAb）</h3>
+        <p style="font-size:0.9em;">保守表位被糖基化屏蔽、构型刁钻。需要极高突变率（&gt;30%），积累罕见的框架区突变、异常长的CDR3等特殊结构特征，才能触及保守表位。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>核心逻辑：</strong><br>
+    不是"突变多 → 所以广谱"，而是"靶表位太刁钻 → 需要大量突变来雕刻特殊结构 → 恰好这种结构能识别保守表位 → 表现为广谱"。
+    <br><br>
+    突变量和广谱性之间<strong>没有简单的线性关系</strong>，取决于靶表位的性质和可及性。
+  </div>
+
+  <div class="warn-box">
+    <strong>⚠️ HIV bnAb难以通过疫苗诱导的原因：</strong><br>
+    ① 需要的突变率太高，正常免疫应答很难在有限时间内积累那么多突变<br>
+    ② 一些必需的中间突变体可能对自身抗原有交叉反应，会被耐受机制清除<br>
+    ③ 需要反复进出生发中心，经历多轮SHM和亲和力选择
+  </div>
+</div>
+
+<!-- ===================== Section 9 ===================== -->
+<div class="card" id="sec9">
+  <h2>9. 抗体多样性来源总结</h2>
+
+  <table class="map-table">
+    <thead>
+      <tr><th>多样性机制</th><th>发生阶段</th><th>发生位置</th><th>贡献程度</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>组合多样性<br>（V×D×J选择）</strong></td>
+        <td>VDJ重组<br>（骨髓）</td>
+        <td>整个V区</td>
+        <td>~10⁴ 种重链<br>×~320种轻链<br>≈ 1.9×10⁶</td>
+      </tr>
+      <tr>
+        <td><strong>连接多样性<br>（N/P核苷酸、外切）</strong></td>
+        <td>VDJ重组<br>（骨髓）</td>
+        <td>CDR3连接处</td>
+        <td>~10⁷ 额外多样性<br>→ 总计 &gt;10¹¹</td>
+      </tr>
+      <tr>
+        <td><strong>重链-轻链配对</strong></td>
+        <td>Pre-B → 未成熟B</td>
+        <td>整个抗体</td>
+        <td>乘法效应</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong style="color:#c53030;">体细胞超突变（SHM）</strong></td>
+        <td>生发中心<br>（外周）</td>
+        <td>V区全域<br>（尤其CDR）</td>
+        <td>在初始库基础上<br>进一步扩展多样性</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box">
+    <strong>一句话总结：</strong>CDR3的多样性主要靠VDJ重组的连接随机性（产生初始repertoire），CDR1/2的多样性初期只靠V基因选择，后期在生发中心通过SHM获得额外变异。整个过程受到中枢耐受和外周耐受的严格质控。
+  </div>
+</div>
+
+<div style="text-align:center; color:#a0aec0; font-size:0.85em; margin: 30px 0 10px; padding-top:20px; border-top:1px solid #e2e8f0;">
+  📚 抗体多样性与B细胞发育 知识笔记 | 整理自对话内容
+</div>
+
+</div>
+
+
+</body></html>

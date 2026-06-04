@@ -1,0 +1,1044 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="x-poe-datastore-behavior" content="local_only"><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCR多样性与T细胞发育知识库</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f0f4f8;
+    color: #1a202c;
+    line-height: 1.8;
+    padding: 20px;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 {
+    text-align: center;
+    font-size: 1.8em;
+    color: #9b2c2c;
+    margin: 20px 0 10px;
+    border-bottom: 3px solid #e53e3e;
+    padding-bottom: 10px;
+  }
+  h2 {
+    font-size: 1.35em;
+    color: #742a2a;
+    margin: 30px 0 12px;
+    padding-left: 12px;
+    border-left: 5px solid #fc8181;
+  }
+  h3 {
+    font-size: 1.1em;
+    color: #2d3748;
+    margin: 18px 0 8px;
+  }
+  p { margin: 8px 0; text-align: justify; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 18px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .highlight-box {
+    background: #fff5f5;
+    border-left: 4px solid #fc8181;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .info-box {
+    background: #ebf8ff;
+    border-left: 4px solid #4299e1;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .warn-box {
+    background: #fffaf0;
+    border-left: 4px solid #ed8936;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .green-box {
+    background: #f0fff4;
+    border-left: 4px solid #48bb78;
+    padding: 14px 18px;
+    margin: 14px 0;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.95em;
+  }
+  .key { color: #c53030; font-weight: bold; }
+  .blue { color: #2b6cb0; font-weight: bold; }
+  .green { color: #276749; font-weight: bold; }
+  .orange { color: #c05621; font-weight: bold; }
+  .purple { color: #6b46c1; font-weight: bold; }
+
+  .diagram {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+    overflow-x: auto;
+  }
+  .diagram-title {
+    text-align: center;
+    font-weight: bold;
+    color: #742a2a;
+    margin-bottom: 14px;
+    font-size: 1.05em;
+  }
+  .gene-row {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .gene-label {
+    width: 90px;
+    font-weight: bold;
+    font-size: 0.85em;
+    color: #4a5568;
+    flex-shrink: 0;
+  }
+  .seg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 0.78em;
+    font-weight: bold;
+    color: #fff;
+    min-width: 36px;
+    text-align: center;
+  }
+  .seg-v { background: #e53e3e; }
+  .seg-d { background: #ed8936; }
+  .seg-j { background: #48bb78; }
+  .seg-c { background: #805ad5; }
+  .seg-skip { background: #fed7d7; color: #c53030; }
+  .dots { color: #a0aec0; margin: 0 2px; }
+
+  .flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 16px 0;
+  }
+  .flow-step {
+    background: #fff5f5;
+    border: 2px solid #fc8181;
+    border-radius: 10px;
+    padding: 12px 20px;
+    text-align: center;
+    font-size: 0.92em;
+    max-width: 640px;
+    width: 100%;
+  }
+  .flow-step.blue-s { background: #ebf8ff; border-color: #4299e1; }
+  .flow-step.green-s { background: #f0fff4; border-color: #68d391; }
+  .flow-step.orange-s { background: #fffaf0; border-color: #ed8936; }
+  .flow-step.purple-s { background: #faf5ff; border-color: #b794f4; }
+  .flow-step.red-s { background: #fff5f5; border-color: #fc8181; }
+  .flow-step.gray-s { background: #f7fafc; border-color: #a0aec0; }
+  .flow-step.dead { background: #1a202c; border-color: #4a5568; color: #e2e8f0; }
+  .flow-arrow {
+    font-size: 1.4em;
+    color: #a0aec0;
+    margin: 4px 0;
+  }
+  .flow-branch {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 640px;
+  }
+  .flow-branch > div {
+    flex: 1;
+    min-width: 180px;
+    border-radius: 10px;
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 0.9em;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .map-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 0.9em;
+  }
+  .map-table th {
+    background: #742a2a;
+    color: #fff;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .map-table td {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    text-align: center;
+  }
+  .map-table tr:nth-child(even) { background: #f7fafc; }
+  .map-table tr:hover { background: #fff5f5; }
+
+  .compare-table th { background: #2c5282; }
+  .compare-table tr:hover { background: #ebf8ff; }
+
+  .vs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0;
+  }
+  .vs-card {
+    border-radius: 10px;
+    padding: 16px;
+    border: 2px solid;
+  }
+
+  svg text { font-family: "Segoe UI", "PingFang SC", sans-serif; }
+
+  .toc {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px 28px;
+    margin: 18px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .toc ul { list-style: none; padding-left: 0; }
+  .toc li { padding: 4px 0; }
+  .toc a { color: #9b2c2c; text-decoration: none; font-size: 0.95em; }
+  .toc a:hover { text-decoration: underline; }
+  .toc-num {
+    display: inline-block;
+    width: 28px; height: 28px; line-height: 28px;
+    text-align: center;
+    background: #e53e3e; color: #fff;
+    border-radius: 50%;
+    font-size: 0.8em; font-weight: bold;
+    margin-right: 8px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 10px; }
+    .card { padding: 16px; }
+    h1 { font-size: 1.4em; }
+    h2 { font-size: 1.15em; }
+    .gene-label { width: 65px; font-size: 0.78em; }
+    .seg { padding: 3px 6px; font-size: 0.7em; min-width: 28px; }
+    .vs-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔬 TCR多样性与T细胞发育 完整笔记</h1>
+
+<div class="toc">
+  <h3>📑 目录</h3>
+  <ul>
+    <li><span class="toc-num">1</span><a href="#sec1">TCR的基本结构</a></li>
+    <li><span class="toc-num">2</span><a href="#sec2">TCR基因座与胚系排列</a></li>
+    <li><span class="toc-num">3</span><a href="#sec3">TCR基因重组流程</a></li>
+    <li><span class="toc-num">4</span><a href="#sec4">环状DNA（TREC）的产生与临床意义</a></li>
+    <li><span class="toc-num">5</span><a href="#sec5">TCR的CDR1 / CDR2 / CDR3来源</a></li>
+    <li><span class="toc-num">6</span><a href="#sec6">CDR与MHC-肽复合物的对接</a></li>
+    <li><span class="toc-num">7</span><a href="#sec7">T细胞在胸腺中的发育全流程</a></li>
+    <li><span class="toc-num">8</span><a href="#sec8">阳性选择（Positive Selection）</a></li>
+    <li><span class="toc-num">9</span><a href="#sec9">阴性选择（Negative Selection）与AIRE</a></li>
+    <li><span class="toc-num">10</span><a href="#sec10">外周耐受机制</a></li>
+    <li><span class="toc-num">11</span><a href="#sec11">TCR vs BCR 核心区别对比</a></li>
+    <li><span class="toc-num">12</span><a href="#sec12">TCR多样性来源总结</a></li>
+    <li><span class="toc-num">13</span><a href="#sec13">为什么TCR没有体细胞超突变？</a></li>
+  </ul>
+</div>
+
+<!-- ===================== Section 1 ===================== -->
+<div class="card" id="sec1">
+  <h2>1. TCR的基本结构</h2>
+
+  <p>大多数T细胞表面的TCR由 <span class="key">α链</span> 和 <span class="key">β链</span> 组成的异二聚体构成（αβ T细胞，约占95%）。少数T细胞表达 <span class="purple">γδ TCR</span>（约占5%），功能和分布不同，此处主要讨论αβ TCR。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 480 320" width="100%" style="max-width:480px; display:block; margin:0 auto;">
+      <!-- Cell membrane -->
+      <rect x="40" y="220" width="400" height="12" rx="6" fill="#fbd38d" stroke="#d69e2e" stroke-width="1.5"></rect>
+      <text x="240" y="252" text-anchor="middle" fill="#975a16" font-size="11">T细胞膜</text>
+      <!-- Alpha chain -->
+      <rect x="100" y="60" width="70" height="50" rx="8" fill="#fc8181" stroke="#c53030" stroke-width="2"></rect>
+      <text x="135" y="90" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Vα</text>
+      <rect x="100" y="115" width="70" height="50" rx="8" fill="#feb2b2" stroke="#c53030" stroke-width="1.5"></rect>
+      <text x="135" y="145" text-anchor="middle" fill="#742a2a" font-size="13" font-weight="bold">Cα</text>
+      <rect x="120" y="170" width="30" height="55" rx="3" fill="#feb2b2" stroke="#c53030"></rect>
+      <text x="80" y="30" fill="#c53030" font-size="12" font-weight="bold">α链</text>
+      <text x="80" y="48" fill="#c53030" font-size="10">（V-J重组）</text>
+      <!-- Beta chain -->
+      <rect x="220" y="60" width="70" height="50" rx="8" fill="#63b3ed" stroke="#2b6cb0" stroke-width="2"></rect>
+      <text x="255" y="90" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">Vβ</text>
+      <rect x="220" y="115" width="70" height="50" rx="8" fill="#bee3f8" stroke="#2b6cb0" stroke-width="1.5"></rect>
+      <text x="255" y="145" text-anchor="middle" fill="#2c5282" font-size="13" font-weight="bold">Cβ</text>
+      <rect x="240" y="170" width="30" height="55" rx="3" fill="#bee3f8" stroke="#2b6cb0"></rect>
+      <text x="310" y="30" fill="#2b6cb0" font-size="12" font-weight="bold">β链</text>
+      <text x="310" y="48" fill="#2b6cb0" font-size="10">（V-D-J重组）</text>
+      <!-- CDR dots -->
+      <circle cx="115" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <circle cx="135" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <circle cx="155" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <circle cx="235" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <circle cx="255" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <circle cx="275" cy="65" r="5" fill="#ffd700" stroke="#b7791f"></circle>
+      <text x="195" y="55" text-anchor="middle" fill="#b7791f" font-size="9" font-weight="bold">CDR</text>
+      <!-- SS bond -->
+      <line x1="170" y1="140" x2="220" y2="140" stroke="#a0aec0" stroke-width="2" stroke-dasharray="4"></line>
+      <text x="195" y="155" text-anchor="middle" fill="#a0aec0" font-size="9">S-S</text>
+      <!-- CD3 complex -->
+      <rect x="30" y="175" width="25" height="50" rx="4" fill="#c6f6d5" stroke="#38a169"></rect>
+      <text x="42" y="205" text-anchor="middle" fill="#276749" font-size="8" font-weight="bold">ε</text>
+      <rect x="55" y="175" width="25" height="50" rx="4" fill="#c6f6d5" stroke="#38a169"></rect>
+      <text x="67" y="205" text-anchor="middle" fill="#276749" font-size="8" font-weight="bold">δ</text>
+      <rect x="310" y="175" width="25" height="50" rx="4" fill="#c6f6d5" stroke="#38a169"></rect>
+      <text x="322" y="205" text-anchor="middle" fill="#276749" font-size="8" font-weight="bold">ε</text>
+      <rect x="335" y="175" width="25" height="50" rx="4" fill="#c6f6d5" stroke="#38a169"></rect>
+      <text x="347" y="205" text-anchor="middle" fill="#276749" font-size="8" font-weight="bold">γ</text>
+      <!-- Zeta -->
+      <rect x="370" y="175" width="20" height="50" rx="4" fill="#e9d8fd" stroke="#805ad5"></rect>
+      <text x="380" y="205" text-anchor="middle" fill="#6b46c1" font-size="8" font-weight="bold">ζ</text>
+      <rect x="390" y="175" width="20" height="50" rx="4" fill="#e9d8fd" stroke="#805ad5"></rect>
+      <text x="400" y="205" text-anchor="middle" fill="#6b46c1" font-size="8" font-weight="bold">ζ</text>
+      <!-- Labels -->
+      <text x="50" y="280" fill="#276749" font-size="10" font-weight="bold">CD3复合物（εδ + εγ）</text>
+      <text x="350" y="280" fill="#6b46c1" font-size="10" font-weight="bold">ζζ链</text>
+      <text x="50" y="298" fill="#718096" font-size="9">含ITAM，负责信号传导</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <strong>关键点：</strong>TCR本身的胞内段极短，不能传递信号。所有信号传导依赖与之非共价结合的 <span class="green">CD3复合物</span>（CD3εδ + CD3εγ）和 <span class="purple">ζζ同二聚体</span>。这些分子的胞内段含有 <strong>ITAM（免疫受体酪氨酸活化基序）</strong>，被Lck磷酸化后启动下游信号。
+  </div>
+</div>
+
+<!-- ===================== Section 2 ===================== -->
+<div class="card" id="sec2">
+  <h2>2. TCR基因座与胚系排列</h2>
+
+  <p>人类TCR共有四个基因座，分别编码α、β、γ、δ四条链。其中 <strong>TRA（α链）基因座</strong>和 <strong>TRD（δ链）基因座</strong>位于同一条染色体上（14号），且TRD嵌套在TRA的V和J片段之间——这意味着α链重组时会将δ链基因座整个删除。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">TCRβ基因座（TRB，7号染色体）</div>
+    <div class="gene-row">
+      <span class="gene-label">胚系DNA:</span>
+      <span class="seg seg-v">Vβ1</span>
+      <span class="seg seg-v">Vβ2</span>
+      <span class="dots">···</span>
+      <span class="seg seg-v">Vβ48</span>
+      <span class="seg seg-d" style="background:#c05621;">Dβ1</span>
+      <span class="seg seg-j">Jβ1.1</span><span class="dots">~</span><span class="seg seg-j">Jβ1.6</span>
+      <span class="seg seg-c">Cβ1</span>
+      <span class="seg seg-d" style="background:#c05621;">Dβ2</span>
+      <span class="seg seg-j">Jβ2.1</span><span class="dots">~</span><span class="seg seg-j">Jβ2.7</span>
+      <span class="seg seg-c">Cβ2</span>
+    </div>
+    <div style="font-size:0.85em; color:#718096; margin-top:6px; padding-left:90px;">
+      约48个V片段 · 2个D片段 · 13个J片段 · 2个C片段（功能基本相同）
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">TCRα基因座（TRA，14号染色体）</div>
+    <div class="gene-row">
+      <span class="gene-label">胚系DNA:</span>
+      <span class="seg seg-v" style="background:#e53e3e;">Vα1</span>
+      <span class="seg seg-v" style="background:#e53e3e;">Vα2</span>
+      <span class="dots">···</span>
+      <span class="seg seg-v" style="background:#e53e3e;">Vα70</span>
+      <span style="background:#fefcbf; color:#975a16; padding:4px 8px; border-radius:4px; font-size:0.75em; border:2px dashed #d69e2e;">δ基因座嵌套在这里</span>
+      <span class="seg seg-j" style="background:#38a169;">Jα1</span>
+      <span class="dots">···</span>
+      <span class="seg seg-j" style="background:#38a169;">Jα61</span>
+      <span class="seg seg-c" style="background:#805ad5;">Cα</span>
+    </div>
+    <div style="font-size:0.85em; color:#718096; margin-top:6px; padding-left:90px;">
+      约70个V片段 · <strong>无D片段</strong> · 61个J片段 · 1个C片段
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>注意：</strong>TCRα有多达 <span class="key">61个J片段</span>，远多于IgH的6个。这极大地补偿了α链没有D片段带来的多样性损失。而且α链重组可以"多次尝试"——如果第一次V-J拼出的TCR没有通过阳性选择，细胞还可以继续用上游的V和下游的J再试一次，类似B细胞的受体编辑。
+  </div>
+</div>
+
+<!-- ===================== Section 3 ===================== -->
+<div class="card" id="sec3">
+  <h2>3. TCR基因重组流程</h2>
+
+  <p>TCR的重组由与BCR完全相同的 <span class="key">RAG1/RAG2</span> 酶执行，遵循<strong>12/23规则</strong>（RSS中12-spacer只能与23-spacer配对）。</p>
+
+  <h3>β链重组（先于α链）</h3>
+
+  <div class="diagram">
+    <div class="diagram-title">TCRβ重组过程</div>
+    <div class="flow">
+      <div class="flow-step blue-s">
+        <strong>① Dβ-Jβ 重组</strong><br>
+        在DN（双阴性）胸腺细胞阶段（CD4⁻CD8⁻），RAG酶先选择一个D和一个J连接<br>
+        例：Dβ1 — Jβ1.4
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step blue-s">
+        <strong>② Vβ-DJβ 重组</strong><br>
+        再选一个V片段接到DJ前面<br>
+        例：Vβ5 — Dβ1 — Jβ1.4
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step green-s">
+        <strong>③ β选择检查点（β-selection）</strong><br>
+        重排的β链与 <strong>pTα（pre-T alpha）</strong> 替代链配对，形成 <strong>pre-TCR</strong><br>
+        能发出信号 → 存活、增殖、进入DP阶段<br>
+        不能信号 → 凋亡
+      </div>
+      <div class="flow-arrow">↓ 等同于BCR的"pre-BCR检查点"</div>
+      <div class="flow-step orange-s">
+        <strong>④ 等位基因排斥（Allelic Exclusion）</strong><br>
+        成功的β链重排会抑制另一条染色体上的β基因座重排<br>
+        确保每个T细胞只表达一种β链
+      </div>
+    </div>
+  </div>
+
+  <h3>α链重组（在DP阶段）</h3>
+
+  <div class="diagram">
+    <div class="diagram-title">TCRα重组过程</div>
+    <div class="flow">
+      <div class="flow-step red-s">
+        <strong>Vα-Jα 重组（无D片段）</strong><br>
+        在DP（CD4⁺CD8⁺双阳性）阶段，两条14号染色体上的α基因座<strong>都可以重排</strong><br>
+        α链 <strong>没有严格的等位基因排斥</strong> → 一个T细胞可能表达两种α链
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step green-s">
+        <strong>可以多次尝试</strong><br>
+        如果第一次V-J组合通不过阳性选择，可以继续用更上游的V和更下游的J再重排<br>
+        61个J片段提供了充足的"重试机会"
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step purple-s">
+        <strong>δ基因座被删除</strong><br>
+        α链的V-J重组会将嵌套在中间的TRD基因座整个切掉 → 形成环状DNA（δREC-ψJα TREC）<br>
+        这意味着一旦走了αβ路线，就不可能再变成γδ T细胞
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>连接多样性：</strong>与BCR一样，V-D和D-J连接处有 <span class="key">TdT酶随机添加N核苷酸</span>、外切酶随机削减末端碱基、以及P核苷酸产生。TCR的CDR3多样性主要来源于此。但注意：TdT在胎儿期表达很低，所以胎儿/新生儿的TCR CDR3多样性低于成人。
+  </div>
+</div>
+
+<!-- ===================== Section 4 ===================== -->
+<div class="card" id="sec4">
+  <h2>4. 环状DNA（TREC）的产生与临床意义</h2>
+
+  <p>与BCR重组一样，TCR重组过程中被跳过的片段不会降解，而是断端相连形成 <span class="key">T-cell Receptor Excision Circle（TREC）</span>。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 500 200" width="100%" style="max-width:500px; display:block; margin:0 auto;">
+      <!-- δREC-ψJα TREC -->
+      <circle cx="130" cy="110" r="55" fill="#fefcbf" stroke="#d69e2e" stroke-width="2.5" stroke-dasharray="6"></circle>
+      <text x="130" y="100" text-anchor="middle" fill="#975a16" font-size="10" font-weight="bold">δREC — ψJα</text>
+      <text x="130" y="118" text-anchor="middle" fill="#975a16" font-size="9">Signal Joint</text>
+      <text x="130" y="136" text-anchor="middle" fill="#975a16" font-size="9">TREC</text>
+      <text x="130" y="185" text-anchor="middle" fill="#975a16" font-size="10" font-weight="bold">α链重组时产生</text>
+      <!-- sj TREC -->
+      <circle cx="350" cy="110" r="55" fill="#e9d8fd" stroke="#805ad5" stroke-width="2.5" stroke-dasharray="6"></circle>
+      <text x="350" y="100" text-anchor="middle" fill="#6b46c1" font-size="10" font-weight="bold">Vβ-Dβ / Dβ-Jβ</text>
+      <text x="350" y="118" text-anchor="middle" fill="#6b46c1" font-size="9">间跳过的片段</text>
+      <text x="350" y="136" text-anchor="middle" fill="#6b46c1" font-size="9">sjTREC</text>
+      <text x="350" y="185" text-anchor="middle" fill="#6b46c1" font-size="10" font-weight="bold">β链重组时产生</text>
+      <!-- Common label -->
+      <text x="250" y="25" text-anchor="middle" fill="#4a5568" font-size="12" font-weight="bold">两种TREC</text>
+    </svg>
+  </div>
+
+  <div class="highlight-box">
+    <strong>临床应用：</strong><br>
+    TREC没有复制起点，每次细胞分裂稀释一半。通过 <strong>qPCR定量检测TREC</strong> 可以评估：<br><br>
+    <span class="key">① 新生儿SCID筛查</span> — 严重联合免疫缺陷患儿胸腺产出极低，TREC接近零，已纳入多国新生儿筛查项目<br><br>
+    <span class="key">② 胸腺功能评估</span> — HIV感染后胸腺萎缩程度、骨髓移植后免疫重建进展、老年人胸腺退化程度<br><br>
+    <span class="key">③ T细胞增殖状态</span> — TREC含量低可能意味着外周T细胞经历了大量分裂（稀释效应）
+  </div>
+</div>
+
+<!-- ===================== Section 5 ===================== -->
+<div class="card" id="sec5">
+  <h2>5. TCR的CDR1 / CDR2 / CDR3来源</h2>
+
+  <p>与BCR完全相同的逻辑：<span class="key">CDR1和CDR2编码在V基因片段内部</span>，<span class="key">CDR3位于V-(D)-J连接处</span>。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">TCRβ链 可变区结构</div>
+    <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2px; margin: 10px 0;">
+      <span class="seg" style="background:#fed7d7; color:#742a2a;">FR1</span>
+      <span class="seg seg-v">CDR1</span>
+      <span class="seg" style="background:#fed7d7; color:#742a2a;">FR2</span>
+      <span class="seg seg-v">CDR2</span>
+      <span class="seg" style="background:#fed7d7; color:#742a2a;">FR3</span>
+      <span style="color:#718096; font-size:0.85em;">← Vβ基因编码 →</span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:2px; margin: 10px 0;">
+      <span class="seg seg-v" style="font-size:0.72em;">Vβ尾</span>
+      <span style="background:#fefcbf; color:#975a16; padding:4px 6px; border-radius:4px; font-size:0.75em; font-weight:bold; border:2px solid #d69e2e;">N+P</span>
+      <span class="seg seg-d">Dβ</span>
+      <span style="background:#fefcbf; color:#975a16; padding:4px 6px; border-radius:4px; font-size:0.75em; font-weight:bold; border:2px solid #d69e2e;">N+P</span>
+      <span class="seg seg-j" style="font-size:0.72em;">Jβ头</span>
+      <span class="seg" style="background:#c6f6d5; color:#276749;">FR4</span>
+      <span style="color:#c53030; font-size:0.85em; font-weight:bold;">← CDR3β →</span>
+    </div>
+  </div>
+
+  <table class="map-table">
+    <thead>
+      <tr><th>区域</th><th>TCRα</th><th>TCRβ</th><th>多样性水平</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CDR1</strong></td>
+        <td>Vα基因内部</td>
+        <td>Vβ基因内部</td>
+        <td>中（取决于V选择）</td>
+      </tr>
+      <tr>
+        <td><strong>CDR2</strong></td>
+        <td>Vα基因内部</td>
+        <td>Vβ基因内部</td>
+        <td>中（取决于V选择）</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong style="color:#c53030;">CDR3</strong></td>
+        <td>Vα-Jα连接处<br>（无D）</td>
+        <td>Vβ-Dβ-Jβ连接处</td>
+        <td><strong style="color:#c53030;">极高</strong></td>
+      </tr>
+      <tr>
+        <td><strong>FR4</strong></td>
+        <td>Jα基因</td>
+        <td>Jβ基因</td>
+        <td>低</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== Section 6 ===================== -->
+<div class="card" id="sec6">
+  <h2>6. CDR与MHC-肽复合物的对接方式</h2>
+
+  <p>TCR的三个CDR环在识别pMHC（肽-MHC复合物）时有相对明确的<strong>功能分工</strong>，这与抗体的CDR有显著区别。</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 500 260" width="100%" style="max-width:520px; display:block; margin:0 auto;">
+      <!-- MHC platform -->
+      <rect x="80" y="160" width="340" height="60" rx="8" fill="#e9d8fd" stroke="#805ad5" stroke-width="2"></rect>
+      <text x="250" y="195" text-anchor="middle" fill="#6b46c1" font-size="13" font-weight="bold">MHC分子</text>
+      <!-- Alpha helices -->
+      <rect x="100" y="130" width="300" height="25" rx="12" fill="#d6bcfa" stroke="#805ad5" stroke-width="1.5"></rect>
+      <text x="250" y="148" text-anchor="middle" fill="#553c9a" font-size="10">α螺旋 — 抗原结合沟 — α螺旋</text>
+      <!-- Peptide in groove -->
+      <rect x="170" y="135" width="160" height="14" rx="7" fill="#fc8181" stroke="#c53030" stroke-width="1.5"></rect>
+      <text x="250" y="147" text-anchor="middle" fill="#fff" font-size="9" font-weight="bold">抗原肽</text>
+      <!-- TCR above -->
+      <!-- CDR1α -->
+      <ellipse cx="140" cy="95" rx="30" ry="16" fill="#feb2b2" stroke="#c53030" stroke-width="1.5"></ellipse>
+      <text x="140" y="99" text-anchor="middle" fill="#742a2a" font-size="9" font-weight="bold">CDR1α</text>
+      <!-- CDR2α -->
+      <ellipse cx="140" cy="55" rx="30" ry="16" fill="#fbd38d" stroke="#d69e2e" stroke-width="1.5"></ellipse>
+      <text x="140" y="59" text-anchor="middle" fill="#975a16" font-size="9" font-weight="bold">CDR2α</text>
+      <!-- CDR3α -->
+      <ellipse cx="215" cy="95" rx="30" ry="16" fill="#ffd700" stroke="#b7791f" stroke-width="2"></ellipse>
+      <text x="215" y="99" text-anchor="middle" fill="#744210" font-size="9" font-weight="bold">CDR3α</text>
+      <!-- CDR3β -->
+      <ellipse cx="285" cy="95" rx="30" ry="16" fill="#ffd700" stroke="#b7791f" stroke-width="2"></ellipse>
+      <text x="285" y="99" text-anchor="middle" fill="#744210" font-size="9" font-weight="bold">CDR3β</text>
+      <!-- CDR1β -->
+      <ellipse cx="360" cy="95" rx="30" ry="16" fill="#90cdf4" stroke="#2b6cb0" stroke-width="1.5"></ellipse>
+      <text x="360" y="99" text-anchor="middle" fill="#2c5282" font-size="9" font-weight="bold">CDR1β</text>
+      <!-- CDR2β -->
+      <ellipse cx="360" cy="55" rx="30" ry="16" fill="#9ae6b4" stroke="#38a169" stroke-width="1.5"></ellipse>
+      <text x="360" y="59" text-anchor="middle" fill="#276749" font-size="9" font-weight="bold">CDR2β</text>
+      <!-- Arrows showing contacts -->
+      <line x1="140" y1="70" x2="140" y2="130" stroke="#d69e2e" stroke-width="1" stroke-dasharray="3"></line>
+      <line x1="360" y1="70" x2="360" y2="130" stroke="#38a169" stroke-width="1" stroke-dasharray="3"></line>
+      <line x1="215" y1="110" x2="215" y2="135" stroke="#b7791f" stroke-width="2"></line>
+      <line x1="285" y1="110" x2="285" y2="135" stroke="#b7791f" stroke-width="2"></line>
+      <!-- Annotations -->
+      <text x="60" y="30" fill="#975a16" font-size="10" font-weight="bold">CDR1/2:</text>
+      <text x="60" y="44" fill="#975a16" font-size="9">主要接触MHC</text>
+      <text x="60" y="58" fill="#975a16" font-size="9">的α螺旋</text>
+      <text x="380" y="30" fill="#276749" font-size="10" font-weight="bold">CDR1/2:</text>
+      <text x="380" y="44" fill="#276749" font-size="9">主要接触MHC</text>
+      <text x="380" y="58" fill="#276749" font-size="9">的α螺旋</text>
+      <text x="250" y="80" text-anchor="middle" fill="#b7791f" font-size="11" font-weight="bold">CDR3α/β: 主要接触抗原肽</text>
+    </svg>
+  </div>
+
+  <div class="info-box">
+    <strong>功能分工：</strong><br>
+    <span class="orange">CDR1α + CDR2α</span> → 主要接触MHC分子N端的α螺旋<br>
+    <span class="green">CDR1β + CDR2β</span> → 主要接触MHC分子C端的α螺旋<br>
+    <span class="key">CDR3α + CDR3β</span> → 位于中央，主要接触沟槽里的<strong>抗原肽</strong><br><br>
+    这解释了为什么CDR1/2（germline编码）决定了MHC限制性，而CDR3（连接多样性）决定了抗原肽特异性。这也解释了阳性选择的逻辑：CDR1/2必须能对MHC有基本的识别能力，这是germline进化保证的。
+  </div>
+</div>
+
+<!-- ===================== Section 7 ===================== -->
+<div class="card" id="sec7">
+  <h2>7. T细胞在胸腺中的发育全流程</h2>
+
+  <div class="diagram">
+    <div class="diagram-title">胸腺T细胞发育的完整旅程</div>
+    <div class="flow">
+      <div class="flow-step gray-s">
+        <strong>骨髓造血干细胞 → 胸腺定居祖细胞（TSP）</strong><br>
+        从骨髓经血液迁入胸腺
+      </div>
+      <div class="flow-arrow">↓ 进入胸腺皮质</div>
+
+      <div class="flow-step" style="background:#2d3748; border-color:#4a5568; color:#e2e8f0;">
+        <strong>DN阶段（双阴性，CD4⁻CD8⁻）</strong><br>
+        分为DN1 → DN2 → DN3 → DN4四个亚阶段
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step blue-s">
+        <strong>DN2-DN3：TCRβ链 D-J → V-DJ 重组</strong><br>
+        RAG1/2表达，TdT活跃
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step green-s">
+        <strong>DN3：β选择检查点 ✅</strong><br>
+        β链 + pTα（替代α链）→ 组装 pre-TCR<br>
+        pre-TCR信号 → ① 停止β座重排（等位排斥）② 大量增殖 ③ 上调CD4和CD8
+      </div>
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step purple-s">
+        <strong>DP阶段（双阳性，CD4⁺CD8⁺）</strong><br>
+        TCRα链 V-J 重组 → 表面表达完整αβ TCR<br>
+        （此时δ基因座被删除，产生TREC）
+      </div>
+      <div class="flow-arrow">↓ 胸腺皮质</div>
+
+      <div class="flow-step green-s" style="border-width:3px;">
+        <strong>🟢 阳性选择（Positive Selection）</strong><br>
+        DP细胞的TCR必须能与皮质上皮细胞（cTEC）的自身MHC<strong>中等亲和力</strong>结合<br>
+        通过 → 存活 · 不通过 → death by neglect（~90%的细胞在此死亡）<br>
+        同时决定CD4/CD8谱系承诺
+      </div>
+      <div class="flow-arrow">↓ 迁移到胸腺髓质</div>
+
+      <div class="flow-step red-s" style="border-width:3px;">
+        <strong>🔴 阴性选择（Negative Selection）</strong><br>
+        TCR与髓质上皮细胞（mTEC）+树突状细胞呈递的自身肽-MHC结合<br>
+        结合太强 → <strong>克隆删除</strong>（凋亡）或分化为 <strong>nTreg</strong><br>
+        mTEC通过AIRE表达外周组织特异性抗原
+      </div>
+      <div class="flow-arrow">↓ 通过两道选择（约2-5%存活）</div>
+
+      <div class="flow-step orange-s" style="border-width:3px;">
+        <strong>成熟Naive T细胞</strong><br>
+        CD4⁺ 单阳性（SP）或 CD8⁺ 单阳性（SP）<br>
+        离开胸腺 → 进入外周循环
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <strong>⚠️ 淘汰率极高：</strong>进入胸腺的前体细胞中，最终只有约 <span class="key">2-5%</span> 能活着离开。绝大多数死于阳性选择失败（~90%），一部分死于阴性选择，还有一部分死于β选择失败。胸腺是一个极其严格的"质检工厂"。
+  </div>
+</div>
+
+<!-- ===================== Section 8 ===================== -->
+<div class="card" id="sec8">
+  <h2>8. 阳性选择（Positive Selection）</h2>
+
+  <p>阳性选择发生在<strong>胸腺皮质</strong>，由<strong>皮质胸腺上皮细胞（cTEC）</strong>执行。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">阳性选择的逻辑</div>
+    <div class="flow">
+      <div class="flow-step blue-s">
+        DP细胞（CD4⁺CD8⁺）表面表达αβ TCR<br>
+        扫描cTEC表面的 自身肽-MHC-I 和 自身肽-MHC-II
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-branch">
+        <div style="background:#f0fff4; border-color:#68d391;">
+          <strong>中等亲和力结合 ✅</strong><br>
+          收到存活信号<br>→ 通过阳性选择
+        </div>
+        <div style="background:#1a202c; border-color:#4a5568; color:#e2e8f0;">
+          <strong>无法结合 / 太弱 ❌</strong><br>
+          收不到存活信号<br>→ <strong>Death by Neglect</strong><br>（忽视死亡，凋亡）
+        </div>
+        <div style="background:#fff5f5; border-color:#fc8181;">
+          <strong>结合太强 ❌</strong><br>
+          留给阴性选择处理<br>（或提前删除）
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>🎯 CD4/CD8谱系决定</h3>
+
+  <div class="vs-grid">
+    <div class="vs-card" style="background:#ebf8ff; border-color:#4299e1;">
+      <h3 style="color:#2b6cb0;">TCR识别 MHC-II</h3>
+      <p>→ 下调CD8，保留CD4</p>
+      <p>→ 成为 <strong>CD4⁺ 辅助T细胞</strong></p>
+      <p style="font-size:0.85em; color:#718096;">MHC-II主要在APC上表达</p>
+    </div>
+    <div class="vs-card" style="background:#fff5f5; border-color:#fc8181;">
+      <h3 style="color:#c53030;">TCR识别 MHC-I</h3>
+      <p>→ 下调CD4，保留CD8</p>
+      <p>→ 成为 <strong>CD8⁺ 细胞毒T细胞</strong></p>
+      <p style="font-size:0.85em; color:#718096;">MHC-I在所有有核细胞上表达</p>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>动力学信号模型（Kinetic Signaling Model）：</strong>目前主流解释谱系选择的模型认为，DP细胞先下调CD8（进入CD4⁺CD8ˡᵒ中间态）。如果TCR识别的是MHC-II，不需要CD8辅助，信号持续 → 分化为CD4⁺。如果识别的是MHC-I，失去CD8后信号中断，细胞在IL-7等细胞因子作用下重新上调CD8 → 分化为CD8⁺。
+  </div>
+</div>
+
+<!-- ===================== Section 9 ===================== -->
+<div class="card" id="sec9">
+  <h2>9. 阴性选择（Negative Selection）与AIRE</h2>
+
+  <p>阴性选择主要发生在<strong>胸腺髓质</strong>，由<strong>髓质胸腺上皮细胞（mTEC）</strong>和<strong>胸腺树突状细胞</strong>共同执行。</p>
+
+  <h3>AIRE的关键角色</h3>
+
+  <p>一个核心问题是：胸腺怎么能"展示"本来只在外周特定组织表达的蛋白（比如胰岛素、甲状腺球蛋白、视网膜抗原）？答案是 <span class="key">AIRE（Autoimmune Regulator）</span> 转录因子。</p>
+
+  <div class="diagram">
+    <div class="diagram-title">AIRE驱动的组织特异性抗原表达</div>
+    <svg viewBox="0 0 500 200" width="100%" style="max-width:500px; display:block; margin:0 auto;">
+      <!-- mTEC cell -->
+      <ellipse cx="250" cy="100" rx="130" ry="70" fill="#faf5ff" stroke="#b794f4" stroke-width="2.5"></ellipse>
+      <text x="250" y="55" text-anchor="middle" fill="#6b46c1" font-size="13" font-weight="bold">mTEC 髓质上皮细胞</text>
+      <!-- AIRE -->
+      <rect x="195" y="70" width="110" height="28" rx="6" fill="#9f7aea" stroke="#6b46c1" stroke-width="2"></rect>
+      <text x="250" y="89" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">AIRE 转录因子</text>
+      <!-- TRAs -->
+      <text x="180" y="125" text-anchor="middle" fill="#553c9a" font-size="9">胰岛素</text>
+      <text x="250" y="125" text-anchor="middle" fill="#553c9a" font-size="9">甲状腺球蛋白</text>
+      <text x="330" y="125" text-anchor="middle" fill="#553c9a" font-size="9">髓鞘蛋白</text>
+      <text x="210" y="145" text-anchor="middle" fill="#553c9a" font-size="9">视网膜S抗原</text>
+      <text x="310" y="145" text-anchor="middle" fill="#553c9a" font-size="9">唾液腺蛋白</text>
+      <text x="250" y="165" text-anchor="middle" fill="#6b46c1" font-size="9">... 数千种组织特异性抗原（TRA）...</text>
+      <!-- Arrow to MHC -->
+      <text x="430" y="80" fill="#c53030" font-size="10" font-weight="bold">→ 加工</text>
+      <text x="430" y="95" fill="#c53030" font-size="10" font-weight="bold">→ MHC呈递</text>
+      <text x="430" y="110" fill="#c53030" font-size="10" font-weight="bold">→ 考验T细胞</text>
+    </svg>
+  </div>
+
+  <div class="highlight-box">
+    <strong>AIRE缺陷的后果：</strong><br>
+    人类AIRE基因突变会导致 <span class="key">APS-1（自身免疫性多内分泌腺综合征1型）</span>，也叫APECED。患者出现多器官自身免疫攻击：慢性黏膜皮肤念珠菌病、甲状旁腺功能减退、肾上腺功能不全等。这直接证明了AIRE在中枢耐受中的不可替代性。
+  </div>
+
+  <h3>阴性选择的三种结局</h3>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-step purple-s">
+        SP细胞的TCR与mTEC/DC呈递的自身肽-MHC结合
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-branch">
+        <div style="background:#1a202c; border-color:#4a5568; color:#e2e8f0;">
+          <strong>高亲和力结合</strong><br>
+          → <strong>克隆删除</strong><br>凋亡
+        </div>
+        <div style="background:#faf5ff; border-color:#b794f4;">
+          <strong>中等亲和力</strong><br>
+          → 分化为<br><strong>nTreg</strong><br>（天然调节性T细胞）<br>表达FoxP3
+        </div>
+        <div style="background:#f0fff4; border-color:#68d391;">
+          <strong>低/无亲和力</strong><br>
+          → <strong>通过</strong><br>成为成熟SP细胞<br>离开胸腺
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="green-box">
+    <strong>nTreg的诞生：</strong>并非所有自反应性T细胞都被杀死。一部分对自身抗原有中等亲和力的CD4⁺ T细胞会上调转录因子 <span class="green">FoxP3</span>，分化为天然调节性T细胞（nTreg）。它们离开胸腺后到外周执行<strong>免疫抑制</strong>功能，是维持外周耐受的重要力量。FoxP3突变导致 <strong>IPEX综合征</strong>（严重多器官自身免疫病）。
+  </div>
+</div>
+
+<!-- ===================== Section 10 ===================== -->
+<div class="card" id="sec10">
+  <h2>10. 外周耐受机制</h2>
+
+  <p>中枢耐受不可能100%完美——总有一些自反应性T细胞漏出胸腺。外周还有多重安全网：</p>
+
+  <div class="diagram">
+    <div class="diagram-title">外周耐受的四道防线</div>
+    <div class="flow">
+      <div class="flow-step orange-s">
+        <strong>① 无知（Ignorance）</strong><br>
+        自身抗原浓度太低、或隔绝在免疫豁免部位（眼、脑、睾丸）<br>
+        T细胞根本遇不到 → 相安无事
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step blue-s">
+        <strong>② 无能（Anergy）</strong><br>
+        T细胞识别了抗原（信号1），但没有收到共刺激信号（信号2，B7-CD28）<br>
+        → 进入功能沉默状态，不增殖、不分泌细胞因子
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step purple-s">
+        <strong>③ 调节性T细胞抑制（Treg Suppression）</strong><br>
+        nTreg + iTreg（外周诱导的Treg）通过CTLA-4、IL-10、TGF-β、IL-35等<br>
+        主动抑制自反应性效应T细胞
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step red-s">
+        <strong>④ 活化诱导的细胞死亡（AICD）</strong><br>
+        反复激活的T细胞上调Fas（CD95）和FasL<br>
+        → Fas-FasL互作 → 凋亡<br>
+        防止T细胞过度扩张
+      </div>
+    </div>
+  </div>
+
+  <div class="warn-box">
+    <strong>⚠️ CTLA-4 和 PD-1：</strong><br>
+    这两个分子是外周耐受的关键<strong>免疫检查点</strong>：<br><br>
+    <span class="key">CTLA-4</span>：与CD28竞争结合B7，传递抑制信号，在Treg上组成性表达。抗CTLA-4抗体（Ipilimumab）用于肿瘤免疫治疗。<br><br>
+    <span class="key">PD-1</span>：与PD-L1/PD-L2结合，抑制效应T细胞功能。肿瘤细胞常高表达PD-L1来逃逸免疫。抗PD-1/PD-L1抗体（Nivolumab、Pembrolizumab等）是目前最重要的免疫检查点抑制剂。<br><br>
+    免疫检查点治疗本质上就是<strong>解除外周耐受</strong>——让T细胞能攻击肿瘤，但副作用就是可能引发自身免疫反应（irAE）。
+  </div>
+</div>
+
+<!-- ===================== Section 11 ===================== -->
+<div class="card" id="sec11">
+  <h2>11. TCR vs BCR 核心区别对比</h2>
+
+  <table class="map-table compare-table">
+    <thead>
+      <tr><th>特征</th><th>TCR（T细胞受体）</th><th>BCR / 抗体（B细胞受体）</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>链组成</strong></td>
+        <td>α + β（或 γ + δ）</td>
+        <td>重链H + 轻链L（κ或λ）</td>
+      </tr>
+      <tr>
+        <td><strong>VDJ重组</strong></td>
+        <td>β链 = VDJ；α链 = VJ</td>
+        <td>重链 = VDJ；轻链 = VJ</td>
+      </tr>
+      <tr>
+        <td><strong>RAG酶</strong></td>
+        <td>✅ 使用</td>
+        <td>✅ 使用（相同的RAG1/2）</td>
+      </tr>
+      <tr>
+        <td><strong>N核苷酸（TdT）</strong></td>
+        <td>✅ 有</td>
+        <td>✅ 有</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong>体细胞超突变（SHM）</strong></td>
+        <td style="color:#c53030; font-weight:bold;">❌ 没有</td>
+        <td style="color:#276749; font-weight:bold;">✅ AID驱动</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong>亲和力成熟</strong></td>
+        <td style="color:#c53030; font-weight:bold;">❌ 没有</td>
+        <td style="color:#276749; font-weight:bold;">✅ 生发中心</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong>类别转换（CSR）</strong></td>
+        <td style="color:#c53030; font-weight:bold;">❌ 没有</td>
+        <td style="color:#276749; font-weight:bold;">✅ IgM → IgG/A/E</td>
+      </tr>
+      <tr>
+        <td><strong>分泌型</strong></td>
+        <td>❌ 永远膜结合</td>
+        <td>✅ 浆细胞分泌可溶性抗体</td>
+      </tr>
+      <tr>
+        <td><strong>识别对象</strong></td>
+        <td>肽-MHC复合物<br>（MHC限制性）</td>
+        <td>游离抗原（蛋白、糖、<br>脂质、小分子、构象表位）</td>
+      </tr>
+      <tr>
+        <td><strong>阳性选择</strong></td>
+        <td>✅ 必须识别自身MHC</td>
+        <td>❌ 不需要</td>
+      </tr>
+      <tr>
+        <td><strong>阴性选择</strong></td>
+        <td>✅ 胸腺髓质（AIRE）</td>
+        <td>✅ 骨髓（受体编辑等）</td>
+      </tr>
+      <tr>
+        <td><strong>中枢耐受场所</strong></td>
+        <td>胸腺</td>
+        <td>骨髓</td>
+      </tr>
+      <tr>
+        <td><strong>等位排斥</strong></td>
+        <td>β链严格；α链不严格<br>（可表达两种α链）</td>
+        <td>重链严格；轻链较严格</td>
+      </tr>
+      <tr>
+        <td><strong>多样性量级</strong></td>
+        <td>~10⁷ — 10⁸</td>
+        <td>&gt;10¹¹（含SHM后 &gt;10¹³）</td>
+      </tr>
+      <tr>
+        <td><strong>Excision Circle</strong></td>
+        <td>TREC</td>
+        <td>KREC</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================== Section 12 ===================== -->
+<div class="card" id="sec12">
+  <h2>12. TCR多样性来源总结</h2>
+
+  <table class="map-table">
+    <thead>
+      <tr><th>多样性机制</th><th>TCRα</th><th>TCRβ</th><th>贡献</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>V基因选择</strong></td>
+        <td>~70个Vα</td>
+        <td>~48个Vβ</td>
+        <td>组合多样性</td>
+      </tr>
+      <tr>
+        <td><strong>D基因选择</strong></td>
+        <td>无D</td>
+        <td>2个Dβ</td>
+        <td>组合多样性（β链）</td>
+      </tr>
+      <tr>
+        <td><strong>J基因选择</strong></td>
+        <td>61个Jα</td>
+        <td>13个Jβ</td>
+        <td>组合多样性</td>
+      </tr>
+      <tr>
+        <td><strong>D的三框阅读</strong></td>
+        <td>—</td>
+        <td>D片段可在三个<br>阅读框中翻译</td>
+        <td>额外3倍多样性</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong>N核苷酸（TdT）</strong></td>
+        <td>Vα-Jα连接处</td>
+        <td>Vβ-Dβ 和 Dβ-Jβ<br>两个连接处</td>
+        <td><strong>主要多样性来源</strong></td>
+      </tr>
+      <tr>
+        <td><strong>P核苷酸</strong></td>
+        <td>V-J连接处</td>
+        <td>V-D和D-J连接处</td>
+        <td>中等</td>
+      </tr>
+      <tr>
+        <td><strong>外切酶削减</strong></td>
+        <td>V和J末端</td>
+        <td>V、D、J末端</td>
+        <td>中等</td>
+      </tr>
+      <tr>
+        <td><strong>α-β链配对</strong></td>
+        <td colspan="2">不同α链×不同β链</td>
+        <td>乘法效应</td>
+      </tr>
+      <tr style="background:#fff5f5;">
+        <td><strong>体细胞超突变</strong></td>
+        <td colspan="2" style="color:#c53030; font-weight:bold;">❌ 不存在</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box">
+    <strong>理论组合数估算：</strong><br>
+    <span class="blue">TCRα：</span>70V × 61J = 4,270 种（未计连接多样性）<br>
+    <span class="blue">TCRβ：</span>48V × 2D × 13J = 1,248 种（未计连接多样性）<br>
+    <span class="blue">α×β配对：</span>4,270 × 1,248 ≈ 5.3 × 10⁶（仅组合多样性）<br>
+    加上连接多样性后总计约 <span class="key">10⁷ — 10⁸ 种不同TCR</span><br>
+    人体内实际存在的不同TCR克隆约 <span class="key">2 × 10⁷ 种</span>
+  </div>
+</div>
+
+<!-- ===================== Section 13 ===================== -->
+<div class="card" id="sec13">
+  <h2>13. 为什么TCR没有体细胞超突变？</h2>
+
+  <p>这是一个经典问题。BCR有SHM可以不断优化，为什么进化没有给TCR同样的能力？目前主要有三个解释：</p>
+
+  <div class="diagram">
+    <div class="flow">
+      <div class="flow-step red-s">
+        <strong>① 自身免疫风险太高</strong><br>
+        TCR在外周活化后如果发生随机突变，可能突变出对自身肽-MHC高亲和力的变体。此时T细胞已经离开胸腺，没有阴性选择机制能将其清除。而T细胞的杀伤力（尤其CD8⁺ CTL）是直接杀死细胞的，比抗体危害更大更快。
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step blue-s">
+        <strong>② MHC限制性使SHM意义有限</strong><br>
+        TCR的CDR1/2需要保持对自身MHC的识别能力——这是阳性选择验证过的。如果SHM改变了CDR1/2，可能破坏与MHC的对接，导致TCR失功能。BCR不受此限制，因为抗体直接识别游离抗原，没有"平台"约束。
+      </div>
+      <div class="flow-arrow">↓</div>
+      <div class="flow-step green-s">
+        <strong>③ T细胞有替代的优化策略</strong><br>
+        T细胞不需要SHM也能高效工作，因为：<br>
+        · 克隆选择已经足够——大量不同TCR克隆中总有亲和力合适的<br>
+        · T细胞活化的阈值本来就比抗体低——TCR只需识别极少量pMHC就能激活（<strong>serial triggering</strong>）<br>
+        · 共受体CD4/CD8和共刺激分子提供额外的亲合力（avidity）补偿
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>有趣的例外？</strong> 有少量研究报道在某些特殊情况下（如慢性感染），TCR可能存在极低水平的突变，但这远不及BCR的SHM规模，且尚有争议。主流观点仍然是 <span class="key">TCR没有生理性的体细胞超突变</span>。
+  </div>
+</div>
+
+<!-- ===================== Footer ===================== -->
+<div style="text-align:center; color:#a0aec0; font-size:0.85em; margin: 30px 0 10px; padding-top:20px; border-top:1px solid #e2e8f0;">
+  🔬 TCR多样性与T细胞发育 知识笔记 | 整理自对话内容
+</div>
+
+</div>
+
+
+</body></html>
